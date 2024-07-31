@@ -41,21 +41,27 @@ public class EmployeeController {
 
     @DeleteMapping("/delete/{index}")
     public ResponseEntity deleteEmployee(@PathVariable int index) {
+         if (index < 0 || index >= employees.size()) {
+            return ResponseEntity.status(404).body(new ApiRespons("Employee not found"));
+        }
         employees.remove(index);
-        return ResponseEntity.status(200).body(new ApiRespons("employee deleted successfully"));
+        return ResponseEntity.status(200).body(new ApiRespons("Employee deleted successfully"));
     }
 
     @GetMapping("/search/{position}")
     public ResponseEntity searchEmployee(@PathVariable String position) {
         ArrayList<Employee> searchemployees = new ArrayList<>();
         for (Employee employee : employees) {
-            if (employee.getPosition().equalsIgnoreCase(position)) {
+            if (position.equalsIgnoreCase("supervisor")||position.equalsIgnoreCase("coordinator") && employee.getPosition().equalsIgnoreCase(position) ) {
                 searchemployees.add(employee);
-                return ResponseEntity.status(200).body(searchemployees);
             }
 
         }
-        return ResponseEntity.status(400).body(new ApiRespons("employee not found"));
+        if(searchemployees.isEmpty()) {
+            return ResponseEntity.status(400).body(new ApiRespons("employee not found"));
+        }
+                        return ResponseEntity.status(200).body(searchemployees);
+
     }
 
     @GetMapping("/searchByAge/{minage}/{maxAge}")
@@ -81,12 +87,16 @@ public class EmployeeController {
             if (emp.getId().equals(id)) {
                 if (emp.isOnLeave() == false && emp.getAnnualLeave() >= 1) {
                     emp.setAnnualLeave(emp.getAnnualLeave() - 1);
-                    return ResponseEntity.status(200).body(new ApiRespons("employee applied successfully"));
+                    emp.setOnLeave(true);
+                   
 
                 }
             }
         }
-        return ResponseEntity.status(400).body(new ApiRespons("employee not exisust"));
+        if(employees.isEmpty()) {
+            return ResponseEntity.status(400).body(new ApiRespons("employee not found"));
+        }
+         return ResponseEntity.status(200).body(new ApiRespons("employee applied successfully"));
 
     }
 
@@ -96,10 +106,13 @@ public class EmployeeController {
         for (Employee employee : employees) {
             if (employee.getAnnualLeave() == 0) {
                 employeesWithNoAnnualLeave.add(employee);
-                return ResponseEntity.status(200).body(employeesWithNoAnnualLeave);
             }
         }
+        if(employeesWithNoAnnualLeave.isEmpty()){
         return ResponseEntity.status(400).body(new ApiRespons("No employees found with zero annual leave remaining"));
+        }
+          return ResponseEntity.status(200).body(employeesWithNoAnnualLeave);
+
     }
 
     @PutMapping("/promote/{sId}/{id}")
